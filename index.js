@@ -9,24 +9,25 @@ import fs from 'fs';
 import readline from 'readline';
 
 const PORT = 5000 || process.env.PORT;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 const storageConfig = multer.diskStorage({
     destination: (req, file, cb) =>{
-        cb(null, "uploads");
+        cb(null, "files/testLanding1/images");
     },
     filename: (req, file, cb) =>{
         cb(null, file.originalname);
     }
 });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const upload = multer({dest:"/files/testLanding1/images/"});
 
 app.use(json());
 app.use(express.static(__dirname));
-app.use(multer({storage:storageConfig}).single("filedata"));
+app.use(multer({storage:storageConfig}).single("image"));
 app.use('/api', router);
 
 const replaceElem = function(elem, replaceElem) {
@@ -84,60 +85,88 @@ app.post('/upload',  async (req, res, next) => {
       const filePath = './files/testLanding1/index.html'; 
       let filedata = req.file;
       console.log(filedata.path);
-      // const rl = readline.createInterface({
-      //     input: fs.createReadStream(filePath),
-      //     crlfDelay: Infinity
-      //   });
-  
-      // let lineCount = 0;
-      // let fileData = '';
-  
-      // rl.on('line', (line) => {
-      //     lineCount++;
-      //     if (line.includes('{main_title}')) {
-      //         fileData += line.replace('{main_title}', title) + '\n';
-      //     } 
-      //     else if (line.includes('{sub_title}')) {
-      //         fileData += line.replace('{sub_title}', subtitle) + '\n';
-      //     } 
-      //     else if (line.includes('{sale_number}')) {
-      //         fileData += line.replace('{sale_number}', sale_number) + '\n';
-      //     } 
-      //     else if (line.includes('{old_cost}')) {
-      //         fileData += line.replace('{old_cost}', old_cost) + '\n';
-      //     } 
-      //     else if (line.includes('{sale_cost}')) {
-      //         fileData += line.replace('{sale_cost}', sale_cost) + '\n';
-      //     } 
-      //     else if (line.includes('{eco}')) {
-      //         fileData += line.replace('{eco}', old_cost-sale_cost) + '\n';
-      //     } 
-      //     else if (line.includes('{list1}')) {
-      //         fileData += line.replace('{list1}', list1) + '\n';
-      //     } 
-      //     else if (line.includes('{list2}')) {
-      //         fileData += line.replace('{list2}', list2) + '\n';
-      //     } 
-      //     else if (line.includes('{v}')) {
-      //         fileData += line.replace('{list3}', list3) + '\n';
-      //     } 
-      //     else if (line.includes('{prod_count_var}')) {
-      //         fileData += line.replace('{prod_count_var}', prod_count_var) + '\n';
-      //     } 
-      //     else {
-      //       fileData += line + '\n';
-      //     }
-      //   });
+      console.log('---------------------');
+      console.log(req.file.filename);
         
-      //   rl.on('close', () => {
-      //     fs.writeFile(filePath, fileData, (err) => {
-      //       if (err) {
-      //         console.error(err);
-      //         return;
-      //       }
-      //       console.log(`HTML has been replaced.`);
-      //     });
-      //   });
+      let lineCount = 0;
+      let fileData = '';
+
+      const rl = readline.createInterface({
+          input: fs.createReadStream(filePath),
+          crlfDelay: Infinity
+        });
+
+  
+      rl.on('line', (line) => {
+          lineCount++;
+          if (line.includes('{main_title}')) {
+              fileData += line.replace('{main_title}', title) + '\n';
+          } 
+          else if (line.includes('{sub_title}')) {
+              fileData += line.replace('{sub_title}', subtitle) + '\n';
+          } 
+          else if (line.includes('{sale_number}')) {
+              fileData += line.replace('{sale_number}', sale_number) + '\n';
+          } 
+          else if (line.includes('{old_cost}')) {
+              fileData += line.replace('{old_cost}', old_cost) + '\n';
+          } 
+          else if (line.includes('{sale_cost}')) {
+              fileData += line.replace('{sale_cost}', sale_cost) + '\n';
+          } 
+          else if (line.includes('{eco}')) {
+              fileData += line.replace('{eco}', old_cost-sale_cost) + '\n';
+          } 
+          else if (line.includes('{list1}')) {
+              fileData += line.replace('{list1}', list1) + '\n';
+          } 
+          else if (line.includes('{list2}')) {
+              fileData += line.replace('{list2}', list2) + '\n';
+          } 
+          else if (line.includes('{list3}')) {
+              fileData += line.replace('{list3}', list3) + '\n';
+          } 
+          else if (line.includes('{prod_count_var}')) {
+              fileData += line.replace('{prod_count_var}', prod_count_var) + '\n';
+          } 
+          else {
+            fileData += line + '\n';
+          }
+        });
+        
+        rl.on('close', () => {
+          fs.writeFile(filePath, fileData, (err) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            console.log(`HTML has been replaced.`);
+          });
+        });
+
+      let cssFileData = '';
+      const rl1 = readline.createInterface({
+        input: fs.createReadStream('./files/testLanding1/css/styles.css'),
+        crlfDelay: Infinity
+      });
+
+      rl1.on('line', (line) => {
+        if (line.includes('{img}')) {
+            cssFileData += line.replace('{img}', req.file.filename);
+        } else {
+            cssFileData += line + '\n';
+        }
+      });
+      
+      rl1.on('close', () => {
+        fs.writeFile('./files/testLanding1/css/styles.css', cssFileData, (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          console.log(`CSS has been replaced.`);
+        });
+      });
         res.json({
           ok: 'ok',
         })
